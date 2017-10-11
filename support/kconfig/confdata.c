@@ -508,7 +508,7 @@ kconfig_print_comment(FILE *fp, const char *value, void *arg)
 
 	for (;;) {
 		l = strcspn(p, "\n");
-		fprintf(fp, "#");
+		fprintf(fp, "//");
 		if (l) {
 			fprintf(fp, " ");
 			xfwrite(p, l, 1, fp);
@@ -520,11 +520,6 @@ kconfig_print_comment(FILE *fp, const char *value, void *arg)
 	}
 }
 
-static struct conf_printer kconfig_printer_cb =
-{
-	.print_symbol = kconfig_print_symbol,
-	.print_comment = kconfig_print_comment,
-};
 
 /*
  * Header printer
@@ -594,6 +589,12 @@ header_print_comment(FILE *fp, const char *value, void *arg)
 	fprintf(fp, " */\n");
 }
 
+static struct conf_printer kconfig_printer_cb =
+{
+	.print_symbol = header_print_symbol,
+	.print_comment = header_print_comment,
+};
+
 static struct conf_printer header_printer_cb =
 {
 	.print_symbol = header_print_symbol,
@@ -616,7 +617,7 @@ tristate_print_symbol(FILE *fp, struct symbol *sym, const char *value, void *arg
 static struct conf_printer tristate_printer_cb =
 {
 	.print_symbol = tristate_print_symbol,
-	.print_comment = kconfig_print_comment,
+	.print_comment = header_print_comment,
 };
 
 static void conf_write_symbol(FILE *fp, struct symbol *sym,
@@ -790,10 +791,21 @@ int conf_write(const char *name)
 			if (!menu_is_visible(menu))
 				goto next;
 			str = menu_get_prompt(menu);
-			fprintf(out, "\n"
-				     "#\n"
-				     "# %s\n"
-				     "#\n", str);
+			
+			if(!menu_is_empty(menu))
+			{
+				printf("a\n");
+				fprintf(out, "\n"
+					 "//\n"
+				     "// %s\n"
+					 "//\n", str);
+			}
+			else
+			{
+				printf("b\n");
+				fprintf(out,
+				     "// %s\n", str);
+			}
 		} else if (!(sym->flags & SYMBOL_CHOICE)) {
 			sym_calc_value(sym);
 			if (!(sym->flags & SYMBOL_WRITE))
